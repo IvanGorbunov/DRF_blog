@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from blog.utils import DateModelMixin
+from blog.utils import DateModelMixin, CounterQuerySetMixin
 
 
 class User(AbstractUser):
@@ -20,6 +20,8 @@ class Article(DateModelMixin):
     """
     title = models.CharField('Название', max_length=250)
     author = models.ForeignKey(User, verbose_name='Автор статьи', related_name='articles', on_delete=models.PROTECT)
+
+    objects = CounterQuerySetMixin.as_manager()
 
     class Meta:
         verbose_name = 'Статья'

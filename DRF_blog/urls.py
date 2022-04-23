@@ -17,9 +17,10 @@ from django.contrib import admin
 from django.urls import path
 
 from django.urls import include, path
+from .yasg import urlpatterns as doc_url
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('DRF_blog.urls_api')),
     path('__debug__/', include('debug_toolbar.urls')),
-]
+] + doc_url

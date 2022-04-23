@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery, Count
 from django_filters import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework.response import Response
@@ -82,3 +82,33 @@ class SearchFilterSet(FilterSet):
                 q_objects |= Q(**{f'{field}__{self.search_method}': value})
             queryset = queryset.filter(q_objects)
         return queryset.distinct()
+
+
+class SubqueryAggregate:
+    """
+    Класс для агрегаций в подзапросах
+    """
+    def __init__(self, sub_model, aggregate, name, filters=None) -> None:
+        self.sub_model = sub_model
+        self.aggregate = aggregate
+        self.name = name
+        self.filters = filters or Q()
+        super().__init__()
+
+    def subquery(self):
+        query = self.sub_model.objects.filter(
+            self.filters,
+            **{self.name: OuterRef('pk')},
+        ).values(self.name).annotate(annotate_value=self.aggregate('pk')).values('annotate_value')
+        return Subquery(query)
+
+
+class CounterQuerySetMixin(models.QuerySet):
+    def annotate_comments_count(self):
+        """
+        Анотация количества комментариев
+        """
+        field = self.model.comments.field
+        sub_class = SubqueryAggregate(field.model, Count, field.name)
+        return self.annotate(comments_count=sub_class.subquery())
+
