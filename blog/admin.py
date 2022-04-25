@@ -23,6 +23,11 @@ class CustomUserAdmin(UserAdmin):
             }
         ),
         (
+            _('User data'), {
+                'fields': ('first_name', 'last_name',)
+            }
+        ),
+        (
             _('Important dates'), {
                 'fields': ('last_login', 'date_joined')
             }
@@ -74,5 +79,5 @@ class ArticleAdmin(ModelAdmin):
 class ArticleCommentAdmin(ModelAdmin):
     verbose_name_plural = 'Комментарии статей'
     raw_id_fields = ('parent', 'user', 'article')
-    list_display = ('id', 'comment', 'parent', )
+    list_display = ('id', 'comment', 'parent', 'user', 'article', )
     search_fields = ('id', 'comment', )

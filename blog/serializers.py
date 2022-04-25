@@ -1,7 +1,8 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
-from blog.models import Article
+from blog.models import Article, ArticleComment, User
 
 
 class ArticleListSerializer(serializers.ModelSerializer):
@@ -15,6 +16,7 @@ class ArticleListSerializer(serializers.ModelSerializer):
 
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
+    comments_count = serializers.IntegerField(label='Количество комментариев')
 
     class Meta:
         model = Article
@@ -33,7 +35,6 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
 class ChangeUserMixin(serializers.Serializer):
 
     def validate(self, attrs):
-        # attrs.update({"change_last_user": self.get_request_user()})
         return super().validate(attrs)
 
     def get_request_user(self):
@@ -54,17 +55,93 @@ class ArticleCreateEditSerializer(AuthorMixin, serializers.ModelSerializer):
         fields = (
             'id',
             'title',
-            # 'author',
         )
 
     @transaction.atomic()
     def create(self, validated_data):
-        # user = self.get_request_user()
-
         return super().create(validated_data)
 
     @transaction.atomic()
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
 
+
+class CommonFullUserSerializer(serializers.ModelSerializer):
+    # first_name = serializers.CharField(source='get_first_name')
+    # last_name = serializers.CharField(source='get_last_name')
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+        )
+
+
+class RecursiveField(serializers.Serializer):
+    """
+    Поле для рекурсивного вывода дерева
+    """
+
+    def to_internal_value(self, data):
+        return data
+
+    def to_representation(self, value):
+        return self.parent.parent.__class__(value, context=self.context).data
+
+
+class ArticleCommentSerializer(serializers.ModelSerializer):
+    user = CommonFullUserSerializer()
+    comments = RecursiveField(many=True, required=False)
+
+    class Meta:
+        model = ArticleComment
+        fields = (
+            'id',
+            'comment',
+            'create_dt',
+            'parent_id',
+            # 'article',
+            'user',
+            'comments',
+        )
+
+
+class ArticleCommentCreateSerializer(serializers.ModelSerializer):
+    create_dt = serializers.DateTimeField(read_only=True)
+    # user = CommonFullUserSerializer(read_only=True)
+
+    class Meta:
+        model = ArticleComment
+        fields = (
+            'id',
+            'comment',
+            'parent',
+            # 'article',
+            'create_dt',
+            # 'user',
+        )
+
+    def validate(self, attrs):
+        article = get_object_or_404(Article, pk=self.context['request'].parser_context['kwargs']['pk'])
+        parent = attrs.get('parent')
+        if parent and parent.article_id != article.id:
+            raise serializers.ValidationError(dict(parent='Статья родителя отличается'))
+        attrs.update(
+            dict(
+                user=self.context['request'].user,
+                article=article,
+            )
+        )
+        return super().validate(attrs)
+
+
+class ArticleCommentUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArticleComment
+        fields = (
+            'comment',
+        )
 

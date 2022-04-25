@@ -1,6 +1,6 @@
 from django_filters.rest_framework import FilterSet
 
-from blog.models import Article
+from blog.models import Article, ArticleComment
 from blog.utils import SearchFilterSet
 
 
@@ -31,9 +31,22 @@ class ArticleDetailFilter(FilterSet):
         qs = qs.select_related(
             'author',
         )
-        # qs = qs.prefetch_related(
-        #     'functions',
-        #     'approvals__author',
-        #     'approvals__user',
-        # )
+        return qs
+
+
+class ArticleCommentFilter(SearchFilterSet):
+    search_fields = ('comment',)
+
+    class Meta:
+        model = ArticleComment
+        fields = (
+        )
+
+    @property
+    def qs(self):
+        qs = super().qs
+        qs = qs.filter(
+            article=self.request.parser_context['kwargs']['pk'],
+            parent__isnull=True
+        ).select_related('user').prefetch_related('comments')
         return qs

@@ -1,9 +1,10 @@
 from rest_framework import status
 from rest_framework.response import Response
 
-from blog.filters import ArticleFilter, ArticleDetailFilter
-from blog.models import Article
-from blog.serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateEditSerializer
+from blog.filters import ArticleFilter, ArticleDetailFilter, ArticleCommentFilter
+from blog.models import Article, ArticleComment
+from blog.serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateEditSerializer, \
+    ArticleCommentSerializer, ArticleCommentCreateSerializer, ArticleCommentUpdateSerializer
 from blog.utils import MultiSerializerViewSet
 
 
@@ -58,3 +59,41 @@ class ArticleViewSet(MultiSerializerViewSet):
         article = self.get_object()
         article.destroy()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ArticleCommentViewSet(MultiSerializerViewSet):
+    queryset = ArticleComment.objects.all()
+    filtersets = {
+        'list': ArticleCommentFilter,
+    }
+    serializers = {
+        'list': ArticleCommentSerializer,
+        'create': ArticleCommentCreateSerializer,
+        'update': ArticleCommentUpdateSerializer,
+    }
+
+    def list(self, request, *args, **kwargs):
+        """
+        Список комментариев к статье
+        """
+        return super().list(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Создание комментария к статье
+        """
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Редактирование комментария
+        """
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Удаление комментария
+        """
+        return super().destroy(request, *args, **kwargs)
+
+
