@@ -38,7 +38,7 @@ class Article(DateModelMixin):
         )
 
 
-class ArticleComment(DateModelMixin, models.Model):
+class ArticleComment(DateModelMixin):
     """
     Модель: Комментарий статьи
     """
@@ -51,6 +51,9 @@ class ArticleComment(DateModelMixin, models.Model):
     user = models.ForeignKey(User, verbose_name='Пользователь', related_name='article_comments',
                              on_delete=models.PROTECT)
 
+    # path = models.CharField('Путь до узла', max_length=255, unique=True)
+    level = models.IntegerField('Уровень вложенности', blank=True, default=0)
+
     class Meta:
         verbose_name = 'Комментарий статьи'
         verbose_name_plural = 'Комментарии статей'
@@ -58,4 +61,18 @@ class ArticleComment(DateModelMixin, models.Model):
     def __str__(self):
         return f'Комментарий: {self.comment[:30]}...'
 
+    @classmethod
+    def get_path(cls, node_path, werk_code=None, spv_code=None):
+        if spv_code:
+            return f'{node_path}:{spv_code}:{werk_code}'
+        elif werk_code:
+            return f'{node_path}:{werk_code}'
+        return f'{node_path}'
+
+    def save(self, *args, **kwargs):
+        lvl = self.level if self.level else 0
+        if lvl < 6:
+            super().save(*args, **kwargs)
+        else:
+            raise AssertionError("Максимальная вложенность: 5")
 

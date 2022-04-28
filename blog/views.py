@@ -62,7 +62,7 @@ class ArticleViewSet(MultiSerializerViewSet):
 
 
 class ArticleCommentViewSet(MultiSerializerViewSet):
-    queryset = ArticleComment.objects.all()
+    queryset = ArticleComment.objects.filter(level__lte=3).all()
     filtersets = {
         'list': ArticleCommentFilter,
     }
@@ -96,4 +96,21 @@ class ArticleCommentViewSet(MultiSerializerViewSet):
         """
         return super().destroy(request, *args, **kwargs)
 
+
+class CommentViewSet(MultiSerializerViewSet):
+    queryset = ArticleComment.objects.filter(level__gte=3).all()
+    filtersets = {
+        'list': ArticleCommentFilter,
+    }
+    serializers = {
+        'list': ArticleCommentSerializer,
+        'create': ArticleCommentCreateSerializer,
+        'update': ArticleCommentUpdateSerializer,
+    }
+
+    def list(self, request, *args, **kwargs):
+        """
+        Список комментариев к статье
+        """
+        return super().list(request, *args, **kwargs)
 

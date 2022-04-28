@@ -41,10 +41,23 @@ class CustomUserAdmin(UserAdmin):
 
 
 class ArticleCommentInline(TabularInline):
-    raw_id_fields = ('parent', 'user', 'article')
+    raw_id_fields = ('parent', 'user', 'article',)
     model = ArticleComment
     extra = 0
     verbose_name_plural = 'Коментарии'
+    fieldsets = (
+        (
+            None, {
+                'fields': (
+                    'article',
+                    'user',
+                    'parent',
+                    'level',
+                    'comment',
+                )
+            }
+        ),
+    )
 
 
 @admin.register(Article)
@@ -79,5 +92,18 @@ class ArticleAdmin(ModelAdmin):
 class ArticleCommentAdmin(ModelAdmin):
     verbose_name_plural = 'Комментарии статей'
     raw_id_fields = ('parent', 'user', 'article')
-    list_display = ('id', 'comment', 'parent', 'user', 'article', )
+    list_display = ('id', 'comment', 'parent', 'level', 'user', 'article', )
     search_fields = ('id', 'comment', )
+    fieldsets = (
+        (
+            None, {
+                'fields': (
+                    'article',
+                    'user',
+                    'parent',
+                    'level',
+                    'comment',
+                )
+            }
+        ),
+    )
