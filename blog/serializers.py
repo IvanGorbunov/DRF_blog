@@ -85,9 +85,6 @@ class RecursiveField(serializers.Serializer):
     Поле для рекурсивного вывода дерева
     """
 
-    def to_internal_value(self, data):
-        return data
-
     def to_representation(self, value):
         return self.parent.parent.__class__(value, context=self.context).data
 
@@ -103,6 +100,7 @@ class ArticleCommentSerializer(serializers.ModelSerializer):
             'comment',
             'create_dt',
             'parent_id',
+            'level',
             # 'article',
             'user',
             'comments',

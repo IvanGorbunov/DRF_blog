@@ -62,7 +62,7 @@ class ArticleViewSet(MultiSerializerViewSet):
 
 
 class ArticleCommentViewSet(MultiSerializerViewSet):
-    queryset = ArticleComment.objects.filter(level__lte=3).all()
+    queryset = ArticleComment.objects.filter(level__lte=3)
     filtersets = {
         'list': ArticleCommentFilter,
     }
