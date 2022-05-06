@@ -57,7 +57,7 @@ class ArticleViewSet(MultiSerializerViewSet):
         Удаление статьи
         """
         article = self.get_object()
-        article.destroy()
+        article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -97,3 +97,17 @@ class ArticleCommentViewSet(MultiSerializerViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+class CommentViewSet(MultiSerializerViewSet):
+    queryset = ArticleComment.objects.all()
+    filtersets = {
+        'list': ArticleCommentFilter,
+    }
+    serializers = {
+        'retrieve': ArticleCommentSerializer,
+    }
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Просмотр статьи
+        """
+        return super().retrieve(request, *args, **kwargs)

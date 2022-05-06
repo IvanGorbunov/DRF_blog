@@ -6,12 +6,15 @@ from blog.models import Article, ArticleComment, User
 
 
 class ArticleListSerializer(serializers.ModelSerializer):
+    comments_count = serializers.IntegerField(source='get_count_comments', read_only=True)
+
     class Meta:
         model = Article
         fields = (
             'id',
             'title',
-            'author'
+            'author',
+            'comments_count',
         )
 
 
@@ -67,8 +70,6 @@ class ArticleCreateEditSerializer(AuthorMixin, serializers.ModelSerializer):
 
 
 class CommonFullUserSerializer(serializers.ModelSerializer):
-    # first_name = serializers.CharField(source='get_first_name')
-    # last_name = serializers.CharField(source='get_last_name')
 
     class Meta:
         model = User
@@ -80,13 +81,17 @@ class CommonFullUserSerializer(serializers.ModelSerializer):
         )
 
 
+class FilterCommentListSerializer(serializers.ListSerializer):
+
+    def to_representation(self, data):
+        data = data.filter(parent=None)
+        return super().to_representation(data)
+
+
 class RecursiveField(serializers.Serializer):
     """
     Поле для рекурсивного вывода дерева
     """
-
-    def to_internal_value(self, data):
-        return data
 
     def to_representation(self, value):
         return self.parent.parent.__class__(value, context=self.context).data
@@ -94,24 +99,25 @@ class RecursiveField(serializers.Serializer):
 
 class ArticleCommentSerializer(serializers.ModelSerializer):
     user = CommonFullUserSerializer()
-    comments = RecursiveField(many=True, required=False)
+    children = RecursiveField(many=True, required=False)
 
     class Meta:
+        list_serializer_class = FilterCommentListSerializer
         model = ArticleComment
         fields = (
             'id',
             'comment',
             'create_dt',
             'parent_id',
-            # 'article',
+            'level',
+            'article',
             'user',
-            'comments',
+            'children',
         )
 
 
 class ArticleCommentCreateSerializer(serializers.ModelSerializer):
     create_dt = serializers.DateTimeField(read_only=True)
-    # user = CommonFullUserSerializer(read_only=True)
 
     class Meta:
         model = ArticleComment
@@ -119,9 +125,7 @@ class ArticleCommentCreateSerializer(serializers.ModelSerializer):
             'id',
             'comment',
             'parent',
-            # 'article',
             'create_dt',
-            # 'user',
         )
 
     def validate(self, attrs):
