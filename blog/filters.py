@@ -48,5 +48,5 @@ class ArticleCommentFilter(SearchFilterSet):
         qs = qs.filter(
             article=self.request.parser_context['kwargs']['pk'],
             parent__isnull=True
-        ).select_related('user').prefetch_related('comments')
+        ).select_related('user')
         return qs

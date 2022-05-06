@@ -1,7 +1,7 @@
-from django.db import models
-from django.db.models import Q, OuterRef, Subquery, Count
+from django.db.models import Q
 from django_filters import CharFilter
 from django_filters.rest_framework import FilterSet
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.viewsets import ModelViewSet
@@ -11,24 +11,11 @@ from rest_framework.test import APITestCase
 
 from django.utils.timezone import now as tz_now
 
+from blog.models import User
+
 
 def generate_uniq_code():
     return str(tz_now().timestamp()).replace('.', '')
-
-
-class CreateModelMixin(models.Model):
-    create_dt = models.DateTimeField('Создание записи', auto_now_add=True)
-
-    class Meta:
-        abstract = True
-
-
-class DateModelMixin(CreateModelMixin, models.Model):
-
-    change_dt = models.DateTimeField('Изменение записи', auto_now=True)
-
-    class Meta:
-        abstract = True
 
 
 class MultiSerializerViewSet(ModelViewSet):
@@ -70,6 +57,32 @@ class TestCaseBase(APITestCase):
         return generate_uniq_code()
 
 
+class WithLoginTestCase(TestCaseBase):
+    """
+    С авторизацией
+    """
+    @classmethod
+    def setUpClass(cls):
+        user, is_create = User.objects.get_or_create(username='admin')
+        if is_create:
+            user.set_password('admin')
+            user.save()
+        cls.user = user
+        cls.token, _ = Token.objects.get_or_create(user=user)
+        super().setUpClass()
+
+    def setUp(self) -> None:
+        self.auth_user(self.user)
+        super().setUp()
+
+    def auth_user(self, user):
+        """
+        Авторизация
+        """
+        token, _ = Token.objects.get_or_create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+
+
 class SearchFilterSet(FilterSet):
     search_fields = ()
     search_method = 'icontains'
@@ -84,31 +97,6 @@ class SearchFilterSet(FilterSet):
         return queryset.distinct()
 
 
-class SubqueryAggregate:
-    """
-    Класс для агрегаций в подзапросах
-    """
-    def __init__(self, sub_model, aggregate, name, filters=None) -> None:
-        self.sub_model = sub_model
-        self.aggregate = aggregate
-        self.name = name
-        self.filters = filters or Q()
-        super().__init__()
-
-    def subquery(self):
-        query = self.sub_model.objects.filter(
-            self.filters,
-            **{self.name: OuterRef('pk')},
-        ).values(self.name).annotate(annotate_value=self.aggregate('pk')).values('annotate_value')
-        return Subquery(query)
 
 
-class CounterQuerySetMixin(models.QuerySet):
-    def annotate_comments_count(self):
-        """
-        Анотация количества комментариев
-        """
-        field = self.model.comments.field
-        sub_class = SubqueryAggregate(field.model, Count, field.name)
-        return self.annotate(comments_count=sub_class.subquery())
 

@@ -57,12 +57,12 @@ class ArticleViewSet(MultiSerializerViewSet):
         Удаление статьи
         """
         article = self.get_object()
-        article.destroy()
+        article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ArticleCommentViewSet(MultiSerializerViewSet):
-    queryset = ArticleComment.objects.filter(level__lte=3)
+    queryset = ArticleComment.objects.all()
     filtersets = {
         'list': ArticleCommentFilter,
     }
@@ -98,19 +98,16 @@ class ArticleCommentViewSet(MultiSerializerViewSet):
 
 
 class CommentViewSet(MultiSerializerViewSet):
-    queryset = ArticleComment.objects.filter(level__gte=3).all()
+    queryset = ArticleComment.objects.all()
     filtersets = {
         'list': ArticleCommentFilter,
     }
     serializers = {
-        'list': ArticleCommentSerializer,
-        'create': ArticleCommentCreateSerializer,
-        'update': ArticleCommentUpdateSerializer,
+        'retrieve': ArticleCommentSerializer,
     }
 
-    def list(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         """
-        Список комментариев к статье
+        Просмотр статьи
         """
-        return super().list(request, *args, **kwargs)
-
+        return super().retrieve(request, *args, **kwargs)

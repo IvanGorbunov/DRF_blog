@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin, TabularInline
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
+from mptt.admin import MPTTModelAdmin
 
 from blog.models import User, Article, ArticleComment
 
@@ -52,7 +53,6 @@ class ArticleCommentInline(TabularInline):
                     'article',
                     'user',
                     'parent',
-                    'level',
                     'comment',
                 )
             }
@@ -69,6 +69,7 @@ class ArticleAdmin(ModelAdmin):
     list_display = (
         'id',
         'title',
+        'author',
         'create_dt',
         'change_dt',
     )
@@ -78,6 +79,7 @@ class ArticleAdmin(ModelAdmin):
             None, {
                 'fields': (
                     'title',
+                    'author',
                 )
             }
         ),
@@ -89,10 +91,17 @@ class ArticleAdmin(ModelAdmin):
 
 
 @admin.register(ArticleComment)
-class ArticleCommentAdmin(ModelAdmin):
+class ArticleCommentAdmin(MPTTModelAdmin):
     verbose_name_plural = 'Комментарии статей'
     raw_id_fields = ('parent', 'user', 'article')
-    list_display = ('id', 'comment', 'parent', 'level', 'user', 'article', )
+    list_display = (
+        'id',
+        'comment',
+        'parent',
+        'level',
+        'user',
+        'article',
+    )
     search_fields = ('id', 'comment', )
     fieldsets = (
         (
@@ -101,7 +110,6 @@ class ArticleCommentAdmin(ModelAdmin):
                     'article',
                     'user',
                     'parent',
-                    'level',
                     'comment',
                 )
             }
