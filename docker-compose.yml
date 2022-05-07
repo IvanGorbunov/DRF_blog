@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+
+  # Database Postgres
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    container_name: DRF_blog_postgres
+
+  # Django App
+  web:
+    build: .
+    volumes:
+      - .:/django
+      - ./wait-for-it.sh:/wait-for-it.sh
+    ports:
+      - 8000:8000
+    image: app:django
+    container_name: DRF_blog
+    command: /wait-for-it.sh db:5432 -- python3 manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - db
