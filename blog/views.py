@@ -1,11 +1,11 @@
 from rest_framework import status
 from rest_framework.response import Response
 
-from blog.filters import ArticleFilter, ArticleDetailFilter, ArticleCommentFilter
+from blog.filters import ArticleFilter, ArticleDetailFilter
 from blog.models import Article, ArticleComment
 from blog.serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateEditSerializer, \
     ArticleCommentSerializer, ArticleCommentCreateSerializer, ArticleCommentUpdateSerializer
-from blog.utils import MultiSerializerViewSet
+from blog.utils import MultiSerializerViewSet, find_child
 
 
 class ArticleViewSet(MultiSerializerViewSet):
@@ -63,9 +63,6 @@ class ArticleViewSet(MultiSerializerViewSet):
 
 class ArticleCommentViewSet(MultiSerializerViewSet):
     queryset = ArticleComment.objects.all()
-    filtersets = {
-        'list': ArticleCommentFilter,
-    }
     serializers = {
         'list': ArticleCommentSerializer,
         'create': ArticleCommentCreateSerializer,
@@ -76,7 +73,58 @@ class ArticleCommentViewSet(MultiSerializerViewSet):
         """
         Список комментариев к статье
         """
-        return super().list(request, *args, **kwargs)
+        # return super().list(request, *args, **kwargs)
+        comments = ArticleComment.objects.raw('''
+            WITH RECURSIVE down_search(id, article_id, comment, parent_id, level) AS (
+                SELECT 
+                    id
+                    ,article_id
+                    ,comment
+                    ,parent_id
+                    ,level
+                    ,TRUE as is_root
+                    ,user_id
+                    ,create_dt
+                FROM blog_articlecomment
+                WHERE article_id = ''' + str(kwargs['pk']) + '''
+                    AND level = 0
+                UNION ALL
+                SELECT
+                    child.id
+                    ,child.article_id
+                    ,child.comment
+                    ,child.parent_id
+                    ,child.level
+                    ,FALSE as is_root
+                    ,child.user_id
+                    ,child.create_dt
+                FROM blog_articlecomment AS child, down_search AS parent
+                WHERE child.parent_id = parent.id
+                )
+            SELECT * FROM down_search
+            WHERE level < 3   
+        ''')
+
+        context = {}
+        for item in comments:  # type ArticleComment
+            if item.is_root:
+                context = {
+                    'id': item.id,
+                    'article_id': item.article_id,
+                    'comment': item.comment,
+                    'parent_id': item.parent_id,
+                    'level': item.level,
+                    'is_root': item.is_root,
+                    'user_id': item.user_id,
+                    'create_dt': item.create_dt,
+                    'children': [],
+                }
+        if not context:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        find_child(context, comments)
+
+        return Response(context, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         """
@@ -99,15 +147,62 @@ class ArticleCommentViewSet(MultiSerializerViewSet):
 
 class CommentViewSet(MultiSerializerViewSet):
     queryset = ArticleComment.objects.all()
-    filtersets = {
-        'list': ArticleCommentFilter,
-    }
     serializers = {
         'retrieve': ArticleCommentSerializer,
     }
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Просмотр статьи
+        Просмотр комментария
         """
-        return super().retrieve(request, *args, **kwargs)
+
+        comments = ArticleComment.objects.raw('''
+            WITH RECURSIVE down_search(id, article_id, comment, parent_id, level) AS (
+                SELECT 
+                    id
+                    ,article_id
+                    ,comment
+                    ,parent_id
+                    ,level
+                    ,TRUE as is_root
+                    ,user_id
+                    ,create_dt
+                FROM blog_articlecomment
+                WHERE id = ''' + str(kwargs['pk']) + '''
+                UNION ALL
+                SELECT
+                    child.id
+                    ,child.article_id
+                    ,child.comment
+                    ,child.parent_id
+                    ,child.level
+                    ,FALSE as is_root
+                    ,child.user_id
+                    ,child.create_dt
+                FROM blog_articlecomment AS child, down_search AS parent
+                WHERE child.parent_id = parent.id
+                )
+            SELECT * FROM down_search   
+        ''')
+
+        context = {}
+        for item in comments:  # type ArticleComment
+            if item.is_root:
+                context = {
+                    'id': item.id,
+                    'article_id': item.article_id,
+                    'comment': item.comment,
+                    'parent_id': item.parent_id,
+                    'level': item.level,
+                    'is_root': item.is_root,
+                    'user_id': item.user_id,
+                    'create_dt': item.create_dt,
+                    'children': [],
+                }
+        if not context:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        find_child(context, comments)
+
+        return Response(context, status=status.HTTP_200_OK)
+

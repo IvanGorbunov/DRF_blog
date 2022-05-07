@@ -81,13 +81,6 @@ class CommonFullUserSerializer(serializers.ModelSerializer):
         )
 
 
-class FilterCommentListSerializer(serializers.ListSerializer):
-
-    def to_representation(self, data):
-        data = data.filter(parent=None)
-        return super().to_representation(data)
-
-
 class RecursiveField(serializers.Serializer):
     """
     Поле для рекурсивного вывода дерева
@@ -102,7 +95,6 @@ class ArticleCommentSerializer(serializers.ModelSerializer):
     children = RecursiveField(many=True, required=False)
 
     class Meta:
-        list_serializer_class = FilterCommentListSerializer
         model = ArticleComment
         fields = (
             'id',

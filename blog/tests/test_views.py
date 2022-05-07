@@ -71,9 +71,9 @@ class ArticleCommentViewTest(WithLoginTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-        result_comment = response.data[0]
-        result_child_comment = result_comment['comments'][0]
-        result_child_child_comment = result_child_comment['comments'][0]
+        result_comment = response.data
+        result_child_comment = result_comment['children'][0]
+        result_child_child_comment = result_child_comment['children'][0]
         self.assertEqual(result_comment['comment'], comment.comment, response.data)
         self.assertEqual(result_child_comment['comment'], child_comment.comment, response.data)
         self.assertEqual(result_child_child_comment['comment'], child_child_comment.comment, response.data)
