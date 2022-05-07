@@ -32,21 +32,3 @@ class ArticleDetailFilter(FilterSet):
             'author',
         )
         return qs
-
-
-class ArticleCommentFilter(SearchFilterSet):
-    search_fields = ('comment',)
-
-    class Meta:
-        model = ArticleComment
-        fields = (
-        )
-
-    @property
-    def qs(self):
-        qs = super().qs
-        qs = qs.filter(
-            article=self.request.parser_context['kwargs']['pk'],
-            parent__isnull=True
-        ).select_related('user')
-        return qs

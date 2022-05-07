@@ -97,6 +97,21 @@ class SearchFilterSet(FilterSet):
         return queryset.distinct()
 
 
-
+def find_child(parent, items):
+    for item in items:  # type ArticleComment
+        if item.parent_id == parent['id']:
+            comment = {
+                'id': item.id,
+                'article_id': item.article_id,
+                'comment': item.comment,
+                'parent_id': item.parent_id,
+                'level': item.level,
+                'is_root': item.is_root,
+                'user_id': item.user_id,
+                'create_dt': item.create_dt,
+                'children': [],
+            }
+            parent['children'].append(comment)
+            find_child(comment, items)
 
 
