@@ -41,7 +41,9 @@
    git clone 
    ```
 2. Создать и заполнить файл`.env` по шаблону `/DRF_blog/.env.template`. Файл`.env` дожен находится в одной директории с `settings.py`.
-    Переменные для заполнения:
+   
+   Переменные для заполнения:
+   
    - для запуска локально:
       ```
       DEBUG=on
@@ -51,6 +53,7 @@
       DJANGO_ALLOWED_HOSTS=*
       STATIC_ROOT=var/www/staticfiles
       ```
+      
    - для запуска в контейнере `Docker`:
       ```
       DEBUG=on
