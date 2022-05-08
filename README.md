@@ -38,7 +38,7 @@
 ## Установка и запуск:
 1. Клонировать репозиторий:
    ```bash
-   git clone 
+   git clone https://github.com/IvanGorbunov/DRF_blog.git
    ```
 2. Создать и заполнить файл`.env` по шаблону `/DRF_blog/.env.template`. Файл`.env` дожен находится в одной директории с `settings.py`.
    
