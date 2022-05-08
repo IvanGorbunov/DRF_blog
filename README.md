@@ -42,14 +42,24 @@
    ```
 2. Создать и заполнить файл`.env` по шаблону `/DRF_blog/.env.template`. Файл`.env` дожен находится в одной директории с `settings.py`
    Переменные для заполнения
-   ```
-   DEBUG=on
-   SQL_DEBUG=on
-   SECRET_KEY=XXXXXX
-   DATABASE_URL=psql://drf_blog:drf_blog@127.0.0.1:5432/drf_blog
-   DJANGO_ALLOWED_HOSTS=127.0.0.1,
-   STATIC_ROOT=var/www/staticfiles
-   ```
+   - для запуска локально:
+      ```
+      DEBUG=on
+      SQL_DEBUG=on
+      SECRET_KEY=XXXXXX
+      DATABASE_URL=psql://drf_blog:drf_blog@127.0.0.1:5432/drf_blog
+      DJANGO_ALLOWED_HOSTS=*
+      STATIC_ROOT=var/www/staticfiles
+      ```
+   - для запуска в контейнере `Docker`:
+      ```
+      DEBUG=on
+      SQL_DEBUG=on
+      SECRET_KEY=XXXXXX
+      DATABASE_URL=psql://postgres:postgres@db:5432/postgres
+      DJANGO_ALLOWED_HOSTS=*
+      STATIC_ROOT=var/www/staticfiles
+      ```
    
 3. Установить витуальное окружение для проекта `venv` в директории проекта:
     ```bash
@@ -81,9 +91,16 @@
    http://127.0.0.1:8000/swagger/ - документация к API
    http://127.0.0.1:8000/api/blog/ - список  (GET, POST)
    ```
-9. Запуск контейнера:
-   ```bash
-   docker-compose up -d --build
-   ```
+9. Запуск в контейнерах:
+    ```bash
+    mkdir -p ./Data/db/
+    docker-compose up -d --build
+    docker-compose run --rm web sh -c "python3 manage.py migrate"
+    docker-compose run --rm web sh -c "python3 manage.py createsuperuser"
+    ```
+10. Запуск тестов в контейнере:
+    ```bash
+    docker-compose run --rm web ./manage.py test
+    ```
 
 
