@@ -146,10 +146,6 @@ class ArticleCommentViewSet(MultiSerializerViewSet):
 
 
 class CommentViewSet(MultiSerializerViewSet):
-    queryset = ArticleComment.objects.all()
-    serializers = {
-        'retrieve': ArticleCommentSerializer,
-    }
 
     def retrieve(self, request, *args, **kwargs):
         """
