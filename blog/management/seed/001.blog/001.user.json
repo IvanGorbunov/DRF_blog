@@ -1,0 +1,27 @@
+[
+  {
+    "username": "user_1",
+    "first_name": "first_name_1",
+    "last_name": "last_name_1"
+  },
+  {
+    "username": "user_2",
+    "first_name": "first_name_2",
+    "last_name": "last_name_2"
+  },
+  {
+    "username": "user_3",
+    "first_name": "first_name_3",
+    "last_name": "last_name_3"
+  },
+  {
+    "username": "user_4",
+    "first_name": "first_name_4",
+    "last_name": "last_name_4"
+  },
+  {
+    "username": "user_5",
+    "first_name": "first_name_5",
+    "last_name": "last_name_5"
+  }
+]
