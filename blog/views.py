@@ -5,7 +5,7 @@ from blog.filters import ArticleFilter, ArticleDetailFilter
 from blog.models import Article, ArticleComment
 from blog.serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateEditSerializer, \
     ArticleCommentSerializer, ArticleCommentCreateSerializer, ArticleCommentUpdateSerializer
-from blog.utils import MultiSerializerViewSet, find_child
+from blog.utils import MultiSerializerViewSet, find_children
 
 
 class ArticleViewSet(MultiSerializerViewSet):
@@ -179,10 +179,10 @@ class CommentViewSet(MultiSerializerViewSet):
                 WHERE child.parent_id = parent.id
                 )
             SELECT * FROM down_search   
-        ''')
+        ''')    # type: RawQuerySet
 
         context = {}
-        for item in comments:  # type ArticleComment
+        for item in comments:  # type: ArticleComment
             if item.is_root:
                 context = {
                     'id': item.id,
@@ -198,7 +198,7 @@ class CommentViewSet(MultiSerializerViewSet):
         if not context:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        find_child(context, comments)
+        find_children(context, comments)
 
         return Response(context, status=status.HTTP_200_OK)
 

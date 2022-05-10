@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db.models.query import RawQuerySet
 from django_filters import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework.authtoken.models import Token
@@ -14,7 +15,7 @@ from django.utils.timezone import now as tz_now
 from blog.models import User
 
 
-def generate_uniq_code():
+def generate_uniq_code() -> str:
     return str(tz_now().timestamp()).replace('.', '')
 
 
@@ -97,7 +98,10 @@ class SearchFilterSet(FilterSet):
         return queryset.distinct()
 
 
-def find_child(parent, items):
+def find_children(parent: dict, items: RawQuerySet) -> None:
+    """
+    Рекурсивный поиск дочерних элементов
+    """
     for item in items:  # type ArticleComment
         if item.parent_id == parent['id']:
             comment = {
@@ -112,6 +116,7 @@ def find_child(parent, items):
                 'children': [],
             }
             parent['children'].append(comment)
-            find_child(comment, items)
+            find_children(comment, items)
+
 
 
