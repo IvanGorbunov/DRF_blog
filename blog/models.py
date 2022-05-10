@@ -111,13 +111,7 @@ class ArticleComment(DateModelMixin, MPTTModel):
     def __str__(self):
         return f'Комментарий: {self.comment[:30]}...'
 
-    @classmethod
-    def get_path(cls, node_path, werk_code=None, spv_code=None):
-        if spv_code:
-            return f'{node_path}:{spv_code}:{werk_code}'
-        elif werk_code:
-            return f'{node_path}:{werk_code}'
-        return f'{node_path}'
+
 
 
 
